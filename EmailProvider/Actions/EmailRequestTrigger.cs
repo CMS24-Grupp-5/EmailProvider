@@ -10,12 +10,12 @@ namespace EmailProvider.Actions;
 public class EmailRequestTrigger
 {
     private readonly ILogger<EmailRequestTrigger> _logger;
-    private readonly EmailService _service;
+    private readonly EmailService _emailService;
 
-    public EmailRequestTrigger(ILogger<EmailRequestTrigger> logger, EmailService service)
+    public EmailRequestTrigger(ILogger<EmailRequestTrigger> logger, EmailService emailService)
     {
         _logger = logger;
-        _service = service;
+        _emailService = emailService;
     }
 
     [Function(nameof(EmailRequestTrigger))]
@@ -33,17 +33,23 @@ public class EmailRequestTrigger
             
             ArgumentNullException.ThrowIfNull(request);
 
-            var result = await _service.SendAsync(request);
+            var result = await _emailService.SendAsync(request);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("Email result: {message}", result.Message);
+                await messageActions.CompleteMessageAsync(message);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to send email: {message}", result.Message);
+                await messageActions.DeadLetterMessageAsync(message, new Dictionary<string, object>{{"Reason", "Email failed to send"}});
+            }
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            _logger.LogError(e, "Failed to process the message");
+            await messageActions.DeadLetterMessageAsync(message, new Dictionary<string, object>{{"Reason", e.Message}});
         }
-        
-        
-
-        await messageActions.CompleteMessageAsync(message);
-        
     }
 }
