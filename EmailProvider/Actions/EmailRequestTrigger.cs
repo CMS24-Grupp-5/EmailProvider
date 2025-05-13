@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using EmailProvider.Models;
+using EmailProvider.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -9,10 +10,12 @@ namespace EmailProvider.Actions;
 public class EmailRequestTrigger
 {
     private readonly ILogger<EmailRequestTrigger> _logger;
+    private readonly EmailService _service;
 
-    public EmailRequestTrigger(ILogger<EmailRequestTrigger> logger)
+    public EmailRequestTrigger(ILogger<EmailRequestTrigger> logger, EmailService service)
     {
         _logger = logger;
+        _service = service;
     }
 
     [Function(nameof(EmailRequestTrigger))]
@@ -29,6 +32,8 @@ public class EmailRequestTrigger
                 });
             
             ArgumentNullException.ThrowIfNull(request);
+
+            var result = await _service.SendAsync(request);
         }
         catch (Exception e)
         {
