@@ -1,19 +1,18 @@
 using Azure;
 using Azure.Communication.Email;
 using EmailProvider.Models;
-using Microsoft.Extensions.Options;
 
 namespace EmailProvider.Services;
 
 public class EmailService
 {
     private readonly EmailClient _client;
-    private readonly AzureCommunicationSettings _settings;
+    private readonly string _senderAddress;
 
-    public EmailService(EmailClient client, IOptions<AzureCommunicationSettings> options)
+    public EmailService(EmailClient client, string senderAddress)
     {
         _client = client;
-        _settings = options.Value;
+        _senderAddress = senderAddress;
     }
     public async Task<EmailResult> SendAsync(EmailSendRequest request)
     {
@@ -27,7 +26,7 @@ public class EmailService
             var recipients = request.Recipients.Select(x => new EmailAddress(x)).ToList();
 
             var message = new EmailMessage(
-                senderAddress: _settings.SenderAddress,
+                senderAddress: _senderAddress,
                 content: new EmailContent(request.Subject)
                 {
                     PlainText = request.PlainText,
