@@ -16,7 +16,10 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
@@ -33,6 +36,13 @@ jobs:
           dotnet build --configuration Release --output ./output
           popd
       
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9AB27EA269E64C9DB30BDBEE3001B70D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FF6B86C530B149B7BAC9EE2BA1F8D493 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_81DD049859C64E1287C6D1334DDD1315 }}
+
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
@@ -40,4 +50,4 @@ jobs:
           app-name: 'Ventixe-email'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C7D58406E9AA400F8BC87B97E31AD918 }}
+          
