@@ -11,7 +11,7 @@ builder.ConfigureFunctionsWebApplication();
 
 var senderAddress = builder.Configuration["SenderAddress"] ?? throw new InvalidOperationException();
 var serviceBus = builder.Configuration["ServiceBus"] ?? throw new InvalidOperationException();
-var connectionString = builder.Configuration["SenderAddress"] ?? throw new InvalidOperationException();
+var connectionString = builder.Configuration["ConnectionString"] ?? throw new InvalidOperationException();
 
 
 builder.Services.AddSingleton(_ => new EmailClient(connectionString));
